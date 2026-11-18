@@ -1,5 +1,6 @@
 object departamentoDeLaMuerte{
     const agentesDeViaje = []
+    const paquetesDeViaje = [new Tren(valorBasico=10), new Bote(valorBasico=100), new Crucero(valorBasico=5), new PaloBurbuja(valorBasico=50)]
 
     method mejorAgente() = agentesDeViaje.max({agente => agente.paqVendidos()})
 
@@ -46,27 +47,33 @@ class Agente{
     method subirDeuda(valor){
         deudaActual += valor
     }
+
+    method atenderAlma(alma, estrategia){
+        self.venderPaquete(estrategia.eligePaquete(), alma)
+    }
 }
 
 
 class Alma{
     var capital
     var dinero
-    var accionesBuenas=[]
+    const accionesBuenas=[]
 
     method capital() = dinero + self.cantidadAccionesBuenas()
 
     method accionesBuenas()= accionesBuenas
 
     method cantidadAccionesBuenas() = accionesBuenas.size()
+
+
 }
 
 class Paquete{
     const valorBasico
 
-    method costo(){
-        (valorBasico * Paquete.reduccionViaje(Alma)).min(350)
-    }
+    method valorBasico() = valorBasico
+
+    method costo()= (valorBasico * Paquete.reduccionViaje(Alma)).min(350)
 
     method reduccionViaje(alma)
 
@@ -92,4 +99,28 @@ class PaloBurbuja inherits Paquete{
     override method reduccionViaje(alma) = 0.05
 
     override method costo() = valorBasico
+}
+
+class Estrategias{
+    method eligePaquete(alma)
+}
+
+object clasico inherits Estrategias{
+    override method eligePaquete(alma){
+     departamentoDeLaMuerte.paquetesDeViaje.max({paquete => paquete.costo()})
+    }
+}
+
+object navegante inherits Estrategias{
+    override method eligePaquete(alma){
+        if (alma.cantidadAccionesBuenas() >= 50){
+            return new Crucero(valorBasico = alma.cantidadAccionesBuenas())
+        } else {
+            return new Bote(valorBasico = alma.cantidadAccionesBuenas())
+        }
+    }
+}
+
+object indiferente inherits Estrategias{
+    override method eligePaquete(alma) = new PaloBurbuja(valorBasico = 1.randomUpTo(300))
 }
